@@ -14,10 +14,13 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://oogbjqqdfbtimgucdvdd.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ufxQMUw1y_qhiZauk4RnQQ_7Gmy99Fa"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ufxQMUw1y_qhiZauk4RnQQ_7Gmy99Fa",
+        "EXPO_PUBLIC_WEB_BASE": "https://bapbti.expo.app"
       },
       "channel": "preview",
       "environment": "preview"
@@ -25,14 +28,16 @@
     "testflight": {
       "extends": "preview",
       "distribution": "store",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "testflight"
     },
     "production": {
       "distribution": "store",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://oogbjqqdfbtimgucdvdd.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ufxQMUw1y_qhiZauk4RnQQ_7Gmy99Fa"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ufxQMUw1y_qhiZauk4RnQQ_7Gmy99Fa",
+        "EXPO_PUBLIC_WEB_BASE": "https://bapbti.expo.app"
       },
       "channel": "production",
       "environment": "production"

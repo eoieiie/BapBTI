@@ -81,8 +81,8 @@ create table public.candidates (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references public.sessions(id) on delete cascade,
   food_id uuid not null references public.foods(id),
-  proposed_by uuid not null references public.members(id),
-  vetoed_by uuid references public.members(id),   -- 거부권 발동 시 누구 때문인지 (화면: "OO이 못 먹어서 빠짐")
+  proposed_by uuid not null references public.members(id) on delete cascade,
+  vetoed_by uuid references public.members(id) on delete set null,   -- 거부권 발동 시 누구 때문인지 (화면: "OO이 못 먹어서 빠짐")
   created_at timestamptz not null default now(),
   unique (session_id, food_id)
 );

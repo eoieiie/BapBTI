@@ -10,7 +10,9 @@
     "ios": {
       "bundleIdentifier": "com.bapbti.app",
       "supportsTablet": false,
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.bapbti.app",
@@ -26,12 +28,33 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-splash-screen", { "backgroundColor": "#F2F4F6", "image": "./assets/images/splash-icon.png", "imageWidth": 150 }],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F2F4F6",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 150
+        }
+      ],
       "expo-status-bar",
       "expo-web-browser",
       "expo-localization"
     ],
-    "experiments": { "typedRoutes": true },
-    "extra": { "router": {} }
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d1c167c0-0a60-43ae-84c1-d044fbe56f57"
+      }
+    },
+    "owner": "eoieiie",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d1c167c0-0a60-43ae-84c1-d044fbe56f57"
+    }
   }
 }
