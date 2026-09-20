@@ -1,0 +1,22 @@
+# Supabase 무료 티어 일시정지 방지 — 매일 1회 (브라키 워크플로 복사)
+# 무료 프로젝트는 1주 비활성이면 정지된다. 주 1회 모임이면 정확히 그 경계라 필요하다.
+# 병주: Settings → Secrets and variables → Actions → Variables 에 SUPABASE_URL / SUPABASE_ANON_KEY 등록
+name: supabase-keepalive
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 매일 UTC 00:00 (KST 09:00)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: ${{ vars.SUPABASE_URL != '' }}
+    steps:
+      - name: Ping Supabase REST
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ vars.SUPABASE_URL }}/rest/v1/foods?select=id&limit=1" \
+            -H "apikey: ${{ vars.SUPABASE_ANON_KEY }}")
+          echo "Supabase responded: $code"
+          test "$code" = "200"

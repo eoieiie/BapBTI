@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 웹: 앱 뒤 페이지 배경 (안전영역·오버스크롤에서 비침) */
+html,
+body {
+  background-color: #f2f4f6;
+}
