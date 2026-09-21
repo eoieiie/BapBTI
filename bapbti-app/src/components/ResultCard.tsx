@@ -3,13 +3,13 @@
 // 병주 스케치 오면 여기만 바꾼다.
 import { Text, View } from 'react-native';
 
+import { foodColor } from '../lib/foodColor';
 import { isKo, t } from '../lib/i18n';
 
 export interface CardData {
   foodId: string;
   groupName: string;
   date: string;
-  foodEmoji: string;
   foodKo: string;
   foodEn: string;
   others: string[]; // 나 빼고 같이 먹은 사람
@@ -18,13 +18,6 @@ export interface CardData {
   myNth: number;
 }
 
-// 음식마다 고정색 → 같은 음식은 항상 같은 카드색, 도감처럼 모인다. 전부 잉크(#1C1C1E) 글자가 읽히는 밝기.
-const PALETTE = ['#FFB86B', '#F2B705', '#9BC53D', '#2EC4B6', '#8ED6FF', '#C9A7EB', '#FF8A80', '#FFD166'];
-export function cardColor(foodId: string): string {
-  let h = 0;
-  for (let i = 0; i < foodId.length; i++) h = (h * 31 + foodId.charCodeAt(i)) >>> 0;
-  return PALETTE[h % PALETTE.length];
-}
 
 /** 카드에서 제일 크게 보여줄 숫자 하나. 관계 > 모임 > 나. 전부 1이면 "첫". */
 function hero(d: CardData): { n: number; caption: string } {
@@ -36,18 +29,17 @@ function hero(d: CardData): { n: number; caption: string } {
 }
 
 export function ResultCard({ d }: { d: CardData }) {
-  const bg = cardColor(d.foodId);
+  const bg = foodColor(d.foodId);
   const h = hero(d);
   const primary = isKo() ? d.foodKo : d.foodEn;
   const secondary = isKo() ? d.foodEn : d.foodKo;
   return (
-    <View className="overflow-hidden rounded-[28px] px-6 pb-6 pt-6" style={{ backgroundColor: bg, aspectRatio: 3 / 4 }}>
+    <View className="overflow-hidden rounded-[28px] px-6 pb-6 pt-6" style={{ backgroundColor: bg, aspectRatio: 4 / 5 }}>
       <Text className="text-[13px] font-bold text-ink/70">{d.groupName} · {d.date}</Text>
 
-      <View className="mt-7">
-        <Text className="text-[72px] leading-[84px]">{d.foodEmoji}</Text>
-        <Text className="mt-2 text-[38px] font-bold leading-[44px] text-ink" numberOfLines={2}>{primary}</Text>
-        <Text className="mt-1 text-[14px] font-bold text-ink/60">{secondary}</Text>
+      <View className="mt-10">
+        <Text className="text-[44px] font-bold leading-[50px] text-ink" numberOfLines={3} adjustsFontSizeToFit>{primary}</Text>
+        <Text className="mt-2 text-[16px] font-bold text-ink/60">{secondary}</Text>
       </View>
 
       <View className="flex-1" />

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View, type PressableProps, type TextInputProps, type TextProps, type TextStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { foodColor } from '../lib/foodColor';
 import { t } from '../lib/i18n';
 
 export function Screen({ children }: { children: ReactNode }) {
@@ -104,13 +105,9 @@ export function Avatar({ name, dim, size = 40 }: { name: string; dim?: boolean; 
   );
 }
 
-/** 음식 아이콘 자리 — 회색 원 위 이모지 (브라키 종 아이콘과 같은 구조) */
-export function FoodDisc({ emoji, size = 44, dim }: { emoji: string; size?: number; dim?: boolean }) {
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2 }} className={`items-center justify-center bg-gray-100 ${dim ? 'opacity-40' : ''}`}>
-      <Text style={{ fontSize: size * 0.5 }}>{emoji}</Text>
-    </View>
-  );
+/** 음식 아이콘 — 음식별 고정색 원 하나. 이모지 없음. */
+export function FoodDisc({ foodId, size = 40, dim }: { foodId: string; size?: number; dim?: boolean }) {
+  return <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: foodColor(foodId) }} className={dim ? 'opacity-30' : ''} />;
 }
 
 /** 카드 안의 행 (브라키 SettingsRow). last 가 아니면 아래 구분선. */

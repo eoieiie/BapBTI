@@ -83,14 +83,14 @@ function Editor({ groupId, initial }: { groupId: string; initial: RestrictionRow
           <Card className="mt-2 py-1">
             {hits.map((f, i) => (
               <Row key={f.id} onPress={() => { setFoodIds([...foodIds, f.id]); setSearch(''); }} last={i === hits.length - 1 && chosen.length === 0}>
-                <FoodDisc emoji={f.emoji} size={40} />
+                <FoodDisc foodId={f.id} size={40} />
                 <Text className="flex-1 text-[16px] text-ink">{foodName(f)}</Text>
                 <Ionicons name="add" size={20} color="#8E8E93" />
               </Row>
             ))}
             {chosen.map((f, i) => (
               <Row key={f.id} last={i === chosen.length - 1}>
-                <FoodDisc emoji={f.emoji} size={40} />
+                <FoodDisc foodId={f.id} size={40} />
                 <Text className="flex-1 text-[16px] font-bold text-ink">{foodName(f)}</Text>
                 <Pressable accessibilityRole="button" onPress={() => setFoodIds(foodIds.filter((x) => x !== f.id))} className="h-10 w-10 items-center justify-center">
                   <Ionicons name="close" size={20} color="#8E8E93" />

@@ -1,7 +1,10 @@
 // 4 결과 카드 화면 — meals 에서 파생한 n번째들. 공유는 v1 텍스트(Share API). 이미지 저장은 카드 디자인 확정 후.
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
-import { Share } from 'react-native';
+import * as Sharing from 'expo-sharing';
+import { useRef, useState } from 'react';
+import { Platform, Share } from 'react-native';
+import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
 import { ResultCard, type CardData } from '../../../components/ResultCard';
 import { Bottom, Button, ErrorBox, Header, Hint, Loading, Screen } from '../../../components/ui';
@@ -11,6 +14,24 @@ import type { FoodRow, MealRow, MemberRow } from '../../../types/db';
 
 export default function Card() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const shot = useRef<ViewShotRef>(null);
+  const [sharing, setSharing] = useState(false);
+
+  // 네이티브: 카드를 PNG 로 찍어서 공유 시트. 웹: 텍스트.
+  const share = async (text: string) => {
+    if (Platform.OS === 'web' || !shot.current) {
+      await Share.share({ message: text });
+      return;
+    }
+    setSharing(true);
+    try {
+      const uri = await shot.current.capture();
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: '밥비티아이' });
+      else await Share.share({ message: text });
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const q = useQuery({
     queryKey: ['card', id],
@@ -42,7 +63,6 @@ export default function Card() {
         foodId: ml.food_id,
         groupName: (group as { name: string } | null)?.name ?? '',
         date: new Date(ml.eaten_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }),
-        foodEmoji: ml.foods.emoji,
         foodKo: ml.foods.name,
         foodEn: ml.foods.name_en,
         others: others.map((o) => o.display_name),
@@ -52,7 +72,7 @@ export default function Card() {
       };
       const fname = foodName(ml.foods);
       const shareText = [
-        `${d.groupName} · ${d.foodEmoji} ${fname}`,
+        `${d.groupName} · ${fname}`,
         ...pairLines.slice(0, 2).map((p) => t('card.pairNth', { name: p.name, n: p.n })),
         t('card.groupNth', { food: fname, n: d.groupNth }),
         '— 밥비티아이',
@@ -67,10 +87,12 @@ export default function Card() {
   return (
     <Screen>
       <Header title={t('card.title')} back />
-      <ResultCard d={q.data} />
+      <ViewShot ref={shot} options={{ format: 'png', quality: 1 }} style={{ backgroundColor: '#F2F4F6', padding: 12, margin: -12 }}>
+        <ResultCard d={q.data} />
+      </ViewShot>
       <Hint className="mt-3 text-center">{t('card.saved')}</Hint>
       <Bottom>
-        <Button label={t('card.share')} primary onPress={() => Share.share({ message: q.data.shareText })} />
+        <Button label={t('card.share')} primary loading={sharing} onPress={() => share(q.data.shareText)} />
       </Bottom>
     </Screen>
   );

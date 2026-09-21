@@ -38,7 +38,7 @@ export default function Me() {
 
           <Card className="mt-3 flex-row">
             <Stat n={String(me.data.total)} label={t('me.total')} />
-            <Stat n={me.data.top ? `${me.data.top.food.emoji} ${me.data.top.n}` : '–'} label={me.data.top ? foodName(me.data.top.food) : t('me.top')} />
+            <Stat n={me.data.top ? String(me.data.top.n) : '–'} label={me.data.top ? foodName(me.data.top.food) : t('me.top')} />
             <Stat n={String(me.data.distinct)} label={t('me.distinct')} />
           </Card>
 
@@ -46,7 +46,7 @@ export default function Me() {
 
           <Section>{t('me.dogam', { n: me.data.distinct, total: me.data.catalogSize })}</Section>
           <Card className="flex-row flex-wrap gap-2.5">
-            {me.data.eatenFoods.map((f) => <FoodDisc key={f.id} emoji={f.emoji} size={48} />)}
+            {me.data.eatenFoods.map((f) => <FoodDisc key={f.id} foodId={f.id} size={44} />)}
             {me.data.eatenFoods.length === 0 && <Hint>–</Hint>}
           </Card>
 

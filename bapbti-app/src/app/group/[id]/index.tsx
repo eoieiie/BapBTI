@@ -91,7 +91,7 @@ export default function Group() {
           {recent.length === 0 && <Hint className="py-3">–</Hint>}
           {recent.map((ml, i) => (
             <Row key={ml.id} last={i === recent.length - 1}>
-              <FoodDisc emoji={ml.foods.emoji} size={40} />
+              <FoodDisc foodId={ml.food_id} size={40} />
               <View className="flex-1">
                 <Text className="text-[16px] font-bold text-ink" numberOfLines={1}>{foodName(ml.foods)}</Text>
                 <Hint className="mt-0.5">{new Date(ml.eaten_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })} · {t('common.people', { n: ml.meal_participants.length })}</Hint>
