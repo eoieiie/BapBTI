@@ -213,6 +213,7 @@ GwC의 `src/lib/{watering,loveScore}.ts` 패턴 그대로.
 
 ## 7. 결정 로그
 
+- 2026-09-21 — **첫 iOS 빌드 → App Store Connect 제출 완료** (빌드 `0.1.0 (1)`, ASC 앱 ID 6814341668, 번들 `com.bapbti.app`). 병주가 Apple 로그인·인증서 생성. 남은 건 TestFlight 내부 테스터 등록(App Store Connect에서 병주). 외부 테스터는 베타 심사 1~2일이라 친구들은 웹 링크.
 - 2026-09-20 — **EAS 프로젝트 `@eoieiie/bapbti` 생성, EAS Update 구성, 웹 배포 `https://bapbti.expo.app`** (초대 링크 실전 가능). `eas.json` 브라키 복제(preview→testflight 상속), 번들 ID `com.bapbti.app`. `EXPO_PUBLIC_WEB_BASE`로 초대 링크가 공개 주소를 가리킴. TestFlight 빌드는 Apple 로그인이 필요해 병주와 같이.
 - 2026-09-19 — **iOS 시뮬레이터(Expo Go)에서 돌아감.** 딥링크 `exp://…/--/g/CODE` → 이름 → 진행 중 세션으로 바로 입장, 웹(호스트)이 룰렛 돌리면 시뮬레이터가 실시간으로 따라옴, 카드까지. 네이티브에서 잡은 것: 키보드가 하단 버튼 가림 → `KeyboardAvoidingView`, 초대 입력 return=참여, 하단 safe area. 첫 세션 = 9/20(일).
 - 2026-09-19 — 어필 한 줄 + 내 후보 빼기 (0005). v1 동결. 병주 "투표로도 정하는" 요청은 이미 있는 투표 단계를 못 본 것 — 텍스트 보고의 한계. 이후 UI 변경은 스크린샷으로 보여준다.
