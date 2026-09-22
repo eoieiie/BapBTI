@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { Platform, ScrollView, Share, Text, View } from 'react-native';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
+import { BuildTag } from '../../components/BuildTag';
 import { Avatar, Button, Card, ErrorBox, FoodDisc, Hint, Loading, Row, Screen, Section, Title } from '../../components/ui';
 import { useMe } from '../../hooks/useMe';
 import { useMyRestrictions } from '../../hooks/useMyRestrictions';
@@ -123,7 +124,9 @@ export default function Me() {
           </Row>
         </Card>
 
-        <Button label={t('me.shareProfile')} className="mb-6 mt-5" loading={sharing} onPress={share} />
+        <Button label={t('me.shareProfile')} className="mt-5" loading={sharing} onPress={share} />
+        <BuildTag />
+        <View className="h-6" />
       </ScrollView>
     </Screen>
   );
