@@ -6,20 +6,49 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { supabase } from '../lib/supabase';
-import type { CandidateRow, FoodRow, MemberRow, ParticipantRow, RestrictionRow, SessionRow, VoteRow } from '../types/db';
+import { currentUserId } from '../lib/currentUser';
+import { roulettePool } from '../lib/decision';
+import type { CandidateRow, FoodRow, MemberRow, ParticipantRow, SessionRow, VoteRow } from '../types/db';
 import { groupKeys } from './useGroups';
 
 export const sessionKey = (id: string) => ['session', id] as const;
+
+/** Realtime 으로 지켜보는 테이블과, 그 테이블에서 세션을 가리키는 컬럼 */
+const WATCHED: readonly [string, string][] = [
+  ['sessions', 'id'],
+  ['session_participants', 'session_id'],
+  ['candidates', 'session_id'],
+  ['votes', 'session_id'],
+];
+
+export type SessionCandidate = CandidateRow & { foods: FoodRow };
 
 export interface LiveSession {
   session: SessionRow;
   members: MemberRow[];
   me: MemberRow | null;
   participants: ParticipantRow[];
-  candidates: (CandidateRow & { foods: FoodRow })[];
+  candidates: SessionCandidate[];
   votes: VoteRow[];
-  restrictions: RestrictionRow[];
   isHost: boolean;
+  /** 화면이 쓰는 파생값 — 여기서 한 번만 계산해서 각 단계 컴포넌트는 그대로 쓴다. */
+  nameOf: (memberId: string) => string;
+  myVotes: string[];
+  votedMembers: number;
+  wheel: { wheelFoods: FoodRow[]; winnerIndex: number | null; decidedFood: FoodRow | null };
+}
+
+/** 룰렛에 그릴 조각들. 서버가 고른 당첨 후보가 빠져 있으면 끼워 넣는다 — 규칙이 어긋나도 화면은 안 깨지게. */
+function buildWheel(candidates: SessionCandidate[], votes: VoteRow[], decidedFoodId: string | null): LiveSession['wheel'] {
+  const pool = roulettePool(candidates, votes);
+  if (decidedFoodId && !pool.includes(decidedFoodId)) pool.push(decidedFoodId);
+  const byId = new Map(candidates.map((c) => [c.food_id, c.foods]));
+  const wheelFoods = pool.map((fid) => byId.get(fid)).filter((f): f is FoodRow => !!f);
+  return {
+    wheelFoods,
+    winnerIndex: decidedFoodId ? wheelFoods.findIndex((f) => f.id === decidedFoodId) : null,
+    decidedFood: decidedFoodId ? (byId.get(decidedFoodId) ?? null) : null,
+  };
 }
 
 export function useLiveSession(id: string | undefined) {
@@ -28,53 +57,62 @@ export function useLiveSession(id: string | undefined) {
   const query = useQuery({
     queryKey: sessionKey(id ?? ''),
     enabled: !!id,
+    // 남의 모임 세션 링크를 열면 RLS 가 0행을 주고 .single() 이 실패한다. 다시 시도해도 결과가 같다.
+    retry: false,
     queryFn: async (): Promise<LiveSession> => {
       const { data: session, error: e0 } = await supabase.from('sessions').select('*').eq('id', id!).single();
       if (e0) throw e0;
       const s = session as SessionRow;
-      const [{ data: members, error: e1 }, { data: participants, error: e2 }, { data: candidates, error: e3 }, { data: votes, error: e4 }, { data: auth }] =
+      const [{ data: members, error: e1 }, { data: participants, error: e2 }, { data: candidates, error: e3 }, { data: votes, error: e4 }] =
         await Promise.all([
           supabase.from('members').select('*').eq('group_id', s.group_id).order('created_at'),
           supabase.from('session_participants').select('*').eq('session_id', s.id).order('joined_at'),
           supabase.from('candidates').select('*, foods(*)').eq('session_id', s.id).order('created_at'),
           supabase.from('votes').select('*').eq('session_id', s.id),
-          supabase.auth.getUser(),
         ]);
       if (e1) throw e1;
       if (e2) throw e2;
       if (e3) throw e3;
       if (e4) throw e4;
       const ms = (members ?? []) as MemberRow[];
-      const memberIds = ms.map((m) => m.id);
-      const { data: restrictions, error: e5 } = await supabase.from('restrictions').select('*').in('member_id', memberIds);
-      if (e5) throw e5;
-      const me = ms.find((m) => m.user_id === auth.user?.id) ?? null;
+      const uid = currentUserId();
+      const me = ms.find((m) => m.user_id === uid) ?? null;
+      const cs = (candidates ?? []) as SessionCandidate[];
+      const vs = (votes ?? []) as VoteRow[];
+      const nameById = new Map(ms.map((m) => [m.id, m.display_name]));
       return {
         session: s,
         members: ms,
         me,
         participants: (participants ?? []) as ParticipantRow[],
-        candidates: (candidates ?? []) as LiveSession['candidates'],
-        votes: (votes ?? []) as VoteRow[],
-        restrictions: (restrictions ?? []) as RestrictionRow[],
+        candidates: cs,
+        votes: vs,
         isHost: !!me && me.id === s.started_by,
+        nameOf: (memberId: string) => nameById.get(memberId) ?? '?',
+        myVotes: me ? vs.filter((v) => v.member_id === me.id).map((v) => v.food_id) : [],
+        votedMembers: new Set(vs.map((v) => v.member_id)).size,
+        wheel: buildWheel(cs, vs, s.decided_food_id),
       };
     },
   });
 
-  // Realtime: 이 세션에 관한 4개 테이블 변화 → 재조회
+  // Realtime: 이 세션에 관한 4개 테이블 변화 → 재조회.
   useEffect(() => {
     if (!id) return;
+    // 구독마다 새 이름을 쓴다. removeChannel 은 비동기라 같은 이름을 재사용하면 정리 전에 새 구독이 붙어서
+    // 이미 subscribe() 된 채널에 on() 을 거는 꼴이 되고, 화면이 죽는다. postgres_changes 는 필터가 on() 에 있어서
+    // 채널 이름은 무엇이든 상관없다.
+    const topic = `session:${id}:${Math.random().toString(36).slice(2)}`;
+
     const invalidate = () => qc.invalidateQueries({ queryKey: sessionKey(id) });
-    const ch = supabase
-      .channel(`session:${id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${id}` }, invalidate)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'session_participants', filter: `session_id=eq.${id}` }, invalidate)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidates', filter: `session_id=eq.${id}` }, invalidate)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes', filter: `session_id=eq.${id}` }, invalidate)
-      .subscribe();
+    const channel = supabase.channel(topic);
+    for (const [table, filter] of WATCHED) {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `${filter}=eq.${id}` }, invalidate);
+    }
+    channel.subscribe();
+
     return () => {
-      supabase.removeChannel(ch);
+      supabase.removeChannel(channel);
     };
   }, [id, qc]);
 
@@ -129,9 +167,18 @@ export function useCastVote(sessionId: string | undefined) {
   }, sessionId);
 }
 export function useSpin(sessionId: string | undefined, groupId?: string) {
-  return useSessionRpc(async (_: void) => {
-    const { data, error } = await supabase.rpc('spin_roulette', { p_session_id: sessionId });
-    if (error) throw error;
-    return data as string;
-  }, sessionId, groupId);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('spin_roulette', { p_session_id: sessionId });
+      if (error) throw error;
+      return data as string;
+    },
+    // 룰렛이 돌면 meals 가 생긴다 → 세션·모임·프로필이 전부 바뀐다
+    onSettled: () => {
+      if (sessionId) qc.invalidateQueries({ queryKey: sessionKey(sessionId) });
+      if (groupId) qc.invalidateQueries({ queryKey: groupKeys.detail(groupId) });
+      qc.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
 }

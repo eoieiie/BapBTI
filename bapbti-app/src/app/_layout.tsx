@@ -45,5 +45,10 @@ function Gate() {
       </View>
     );
   }
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F2F4F6' } }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F2F4F6' }, animation: 'slide_from_right' }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="g/[code]" options={{ animation: 'fade' }} />
+    </Stack>
+  );
 }

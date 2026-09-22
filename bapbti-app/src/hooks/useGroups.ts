@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { currentUserId } from '../lib/currentUser';
 import { supabase } from '../lib/supabase';
 import type { FoodRow, GroupByCode, GroupRow, MealRow, MemberRow } from '../types/db';
 
@@ -14,11 +15,12 @@ export function useMyGroups() {
   return useQuery({
     queryKey: groupKeys.mine,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
+      const uid = currentUserId();
+      if (!uid) return [];
       const { data, error } = await supabase
         .from('members')
         .select('id, group_id, groups!members_group_id_fkey(*)') // members↔groups FK 가 둘(group_id / created_by)이라 명시 안 하면 PostgREST 300
-        .eq('user_id', auth.user?.id ?? '') // RLS 는 "내 모임의 모든 멤버"를 주므로 내 것만 걸러야 한다
+        .eq('user_id', uid) // RLS 는 "내 모임의 모든 멤버"를 주므로 내 것만 걸러야 한다
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []).map((m) => ({ member_id: m.id as string, group: m.groups as unknown as GroupRow }));
@@ -39,19 +41,18 @@ export function useGroup(id: string | undefined) {
     queryKey: groupKeys.detail(id ?? ''),
     enabled: !!id,
     queryFn: async (): Promise<GroupDetail> => {
-      const [{ data: group, error: e1 }, { data: members, error: e2 }, { data: recent, error: e3 }, { data: active, error: e4 }, { data: auth }] =
+      const [{ data: group, error: e1 }, { data: members, error: e2 }, { data: recent, error: e3 }, { data: active, error: e4 }] =
         await Promise.all([
           supabase.from('groups').select('*').eq('id', id!).single(),
           supabase.from('members').select('*').eq('group_id', id!).order('created_at'),
           supabase.from('meals').select('*, foods(*), meal_participants(member_id)').eq('group_id', id!).order('eaten_at', { ascending: false }).limit(5),
           supabase.from('sessions').select('id').eq('group_id', id!).neq('status', 'done').order('created_at', { ascending: false }).limit(1),
-          supabase.auth.getUser(),
         ]);
       if (e1) throw e1;
       if (e2) throw e2;
       if (e3) throw e3;
       if (e4) throw e4;
-      const uid = auth.user?.id;
+      const uid = currentUserId();
       return {
         group: group as GroupRow,
         members: (members ?? []) as MemberRow[],

@@ -5,6 +5,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { setCurrentUserId } from '../lib/currentUser';
 import { supabase } from '../lib/supabase';
 
 interface AuthState {
@@ -31,10 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         session = anon.session;
       }
-      if (!cancelled) setState({ session, loading: false, error: null });
+      if (!cancelled) {
+        setCurrentUserId(session?.user.id ?? null);
+        setState({ session, loading: false, error: null });
+      }
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setCurrentUserId(session?.user.id ?? null);
       setState((s) => ({ ...s, session }));
     });
     return () => {

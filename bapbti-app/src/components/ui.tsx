@@ -1,6 +1,6 @@
 // UI 조각 — 브라키 클래스 복제(rounded-[23px] 카드 · px-4 py-3.5 행). 테두리 없음. 디자인 시스템 아님 (DECISIONS #10).
 import { Ionicons } from '@expo/vector-icons';
-import { Link, useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View, type PressableProps, type TextInputProps, type TextProps, type TextStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,10 +22,12 @@ export function Screen({ children }: { children: ReactNode }) {
 /** 모든 화면 공통 헤더 — 높이·위치가 화면마다 같아야 한다. */
 export function Header({ title, back, chip, right }: { title: string; back?: boolean; chip?: string; right?: ReactNode }) {
   const router = useRouter();
+  // 카톡 링크로 바로 들어오면 쌓인 화면이 없어서 back() 이 아무것도 못 한다 — 그때는 홈으로 보낸다.
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
     <View className="mb-3 h-14 flex-row items-center">
       {back && (
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={() => router.back()} className="-ml-2 mr-1 h-10 w-10 items-center justify-center active:opacity-60">
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={goBack} className="-ml-2 mr-1 h-10 w-10 items-center justify-center active:opacity-60">
           <Ionicons name="chevron-back" size={24} color="#1C1C1E" />
         </Pressable>
       )}
@@ -112,7 +114,7 @@ export function FoodDisc({ foodId, size = 40, dim }: { foodId: string; size?: nu
 
 /** 카드 안의 행 (브라키 SettingsRow). last 가 아니면 아래 구분선. */
 export function Row({ children, onPress, last, className = '' }: { children: ReactNode; onPress?: () => void; last?: boolean; className?: string }) {
-  const inner = <View className={`min-h-[56px] flex-row items-center gap-3.5 py-3 ${className}`}>{children}</View>;
+  const inner = <View className={`flex-row items-center gap-3.5 py-3.5 ${className}`}>{children}</View>;
   return (
     <View>
       {onPress ? <Pressable onPress={onPress} className="active:opacity-70">{inner}</Pressable> : inner}
@@ -152,20 +154,3 @@ export function Bottom({ children }: { children: ReactNode }) {
   return <View className="pt-3" style={{ paddingBottom: Math.max(insets.bottom, 12) + 8 }}>{children}</View>;
 }
 
-export function BottomBar({ active }: { active: 'groups' | 'me' }) {
-  const tab = (key: 'groups' | 'me', href: Href, label: string, icon: 'people' | 'person') => (
-    <Link href={href} asChild>
-      <Pressable className="h-14 flex-1 items-center justify-center gap-0.5">
-        <Ionicons name={active === key ? icon : (`${icon}-outline` as 'people-outline' | 'person-outline')} size={22} color={active === key ? '#1C1C1E' : '#8E8E93'} />
-        <Text className={`text-[11px] ${active === key ? 'font-bold text-ink' : 'text-sub'}`}>{label}</Text>
-      </Pressable>
-    </Link>
-  );
-  const insets = useSafeAreaInsets();
-  return (
-    <View className="-mx-5 flex-row bg-white" style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
-      {tab('groups', '/', t('tabs.groups'), 'people')}
-      {tab('me', '/me', t('tabs.me'), 'person')}
-    </View>
-  );
-}

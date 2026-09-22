@@ -20,3 +20,11 @@ export function foodName(f: { name: string; name_en: string }): string {
 }
 
 export const t = i18n.t.bind(i18n);
+
+/** Supabase 에러를 사람 말로. 못 알아보는 건 원문 그대로 둔다(디버깅용). */
+export function humanError(message: string): string {
+  if (message.includes('coerce the result') || message.includes('0 rows')) return t('common.notMember');
+  if (message.includes('not a member')) return t('common.notMember');
+  if (message.includes('host only')) return t('session.hostOnly');
+  return message;
+}

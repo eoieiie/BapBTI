@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 
 import { Bottom, Button, Chip, ErrorBox, Hint, Input, Loading, Screen } from '../../components/ui';
 import { useGroupByCode, useJoinGroup } from '../../hooks/useGroups';
-import { t } from '../../lib/i18n';
+import { humanError, t } from '../../lib/i18n';
 
 export default function Invite() {
   const { code } = useLocalSearchParams<{ code: string }>();
@@ -35,8 +35,8 @@ export default function Invite() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data?.id, alreadyIn]);
 
-  if (q.isPending) return <Screen><Loading /></Screen>;
-  if (q.isError) return <Screen><ErrorBox message={q.error.message} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isError) return <Screen><ErrorBox message={humanError(q.error.message)} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isLoading) return <Screen><Loading /></Screen>;
   if (!q.data) return <Screen><ErrorBox message={t('invite.notFound')} /></Screen>;
   if (alreadyIn) return <Screen><Loading /></Screen>;
 

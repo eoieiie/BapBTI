@@ -213,6 +213,9 @@ GwC의 `src/lib/{watering,loveScore}.ts` 패턴 그대로.
 
 ## 7. 결정 로그
 
+- 2026-09-22 — **병주 피드백 + 코드 감사.** 탭을 진짜 Tabs 네비게이터로(각 탭이 자기 자리를 기억, 뒤로가기 방향 정상) · 투표 익명(투표 중 표 수 비공개, 진행률만) · 못 먹는 건 모임이 아니라 사람에 붙게(0007, 프로필에서 한 번 적으면 모든 모임에 적용·새 모임 참여 시 복사·세션 첫 단계에 항상 노출) · 프로필에 레벨/타이틀/도감 + 이미지 자랑하기 · 맵기 제거 · 최근 기록 간격.
+  **실행해서 잡은 버그 5:** ① Realtime 채널 이름 재사용 → 재진입·Fast Refresh 때 `cannot add postgres_changes after subscribe()` 로 화면 사망 → 구독마다 고유 이름. ② 딥링크로 바로 들어오면 뒤로가기가 아무 동작 안 함 → `canGoBack()` 없으면 홈. ③ 멤버 아닌 사람이 세션 링크 열면 무한 로딩 → `retry:false` + "에러 먼저, 데이터 없으면 로딩" 순서로 정리, 에러 문구는 사람 말로(`humanError`). ④ 룰렛이 돌아 meals 가 생겨도 프로필 숫자가 안 바뀜 → `['me']` 무효화. ⑤ 최근 n끼를 멤버별로 따로 불러 모임이 둘 이상이면 순서가 틀림 → 한 쿼리로.
+  **리팩터링:** 세션 화면 229줄 → 단계별 컴포넌트 3개(`components/session/`)로 분리, 파생값(`nameOf`·`myVotes`·`votedMembers`·`wheel`)은 훅에서 한 번만 계산. `supabase.auth.getUser()` 5곳(매번 네트워크 검증) → `lib/currentUser.ts` 캐시. 세션 조회에서 쓰지도 않던 restrictions 조회 제거. `decision.ts`의 서버 로직 복제본(`vetoedBy`·`tally`) 삭제 — 어긋나면 조용히 틀리므로 거부권·집계는 서버만. 서버와 클라이언트 룰렛 풀이 달라도 화면이 안 깨지게 당첨 후보 보정.
 - 2026-09-21 — 병주 폰 피드백 반영: 룰렛 포인터 물방울, 라벨 항상 똑바로, 조각=음식색, 결과 텍스트 줄바꿈, 이모지 전부 제거(색 원으로), 결과 등장 스프링 + 룰렛 햅틱. **카드 이미지 공유**(view-shot + expo-sharing, 웹은 텍스트) — v1.5 항목을 당김: 공유가 텍스트면 카드가 의미 없어서. GitHub `eoieiie/BapBTI`(private) + keepalive 변수. 도메인은 EAS 유료 플랜 조건.
 - 2026-09-21 — **첫 iOS 빌드 → App Store Connect 제출 완료** (빌드 `0.1.0 (1)`, ASC 앱 ID 6814341668, 번들 `com.bapbti.app`). 병주가 Apple 로그인·인증서 생성. 남은 건 TestFlight 내부 테스터 등록(App Store Connect에서 병주). 외부 테스터는 베타 심사 1~2일이라 친구들은 웹 링크.
 - 2026-09-20 — **EAS 프로젝트 `@eoieiie/bapbti` 생성, EAS Update 구성, 웹 배포 `https://bapbti.expo.app`** (초대 링크 실전 가능). `eas.json` 브라키 복제(preview→testflight 상속), 번들 ID `com.bapbti.app`. `EXPO_PUBLIC_WEB_BASE`로 초대 링크가 공개 주소를 가리킴. TestFlight 빌드는 Apple 로그인이 필요해 병주와 같이.

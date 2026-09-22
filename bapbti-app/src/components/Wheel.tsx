@@ -7,6 +7,7 @@ import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 
 const R = 140;
 const C = 150;
+export const SPIN_MS = 3600;
 
 function arc(a0: number, a1: number) {
   const x0 = C + R * Math.cos(a0), y0 = C + R * Math.sin(a0);
@@ -33,7 +34,7 @@ export function Wheel({ labels, colors, winnerIndex, onDone }: { labels: string[
       const k = Math.floor((value / 360) * n);
       if (k !== lastTick.current) { lastTick.current = k; tick(); }
     });
-    Animated.timing(spin, { toValue: target, duration: 3600, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
+    Animated.timing(spin, { toValue: target, duration: SPIN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
       spin.removeListener(sub);
       if (finished) { land(); onDone?.(); }
     });

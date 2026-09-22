@@ -8,7 +8,8 @@ import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
 import { ResultCard, type CardData } from '../../../components/ResultCard';
 import { Bottom, Button, ErrorBox, Header, Hint, Loading, Screen } from '../../../components/ui';
-import { foodName, t } from '../../../lib/i18n';
+import { currentUserId } from '../../../lib/currentUser';
+import { foodName, humanError, t } from '../../../lib/i18n';
 import { supabase } from '../../../lib/supabase';
 import type { FoodRow, MealRow, MemberRow } from '../../../types/db';
 
@@ -40,13 +41,13 @@ export default function Card() {
       const { data: meal, error: e0 } = await supabase.from('meals').select('*, foods(*), meal_participants(member_id)').eq('session_id', id!).single();
       if (e0) throw e0;
       const ml = meal as MealRow & { foods: FoodRow; meal_participants: { member_id: string }[] };
-      const [{ data: group }, { data: members }, { data: auth }] = await Promise.all([
+      const [{ data: group }, { data: members }] = await Promise.all([
         supabase.from('groups').select('name').eq('id', ml.group_id).single(),
         supabase.from('members').select('*').eq('group_id', ml.group_id),
-        supabase.auth.getUser(),
       ]);
       const ms = (members ?? []) as MemberRow[];
-      const me = ms.find((m) => m.user_id === auth.user?.id) ?? null;
+      const uid = currentUserId();
+      const me = ms.find((m) => m.user_id === uid) ?? null;
       const pids = ml.meal_participants.map((p) => p.member_id);
       const others = ms.filter((m) => pids.includes(m.id) && m.id !== me?.id);
 
@@ -81,8 +82,8 @@ export default function Card() {
     },
   });
 
-  if (q.isPending) return <Screen><Loading /></Screen>;
-  if (q.isError) return <Screen><ErrorBox message={q.error.message} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isError) return <Screen><ErrorBox message={humanError(q.error.message)} onRetry={() => q.refetch()} /></Screen>;
+  if (!q.data) return <Screen><Loading /></Screen>;
 
   return (
     <Screen>

@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, Text, View } from 'react-native';
 
-import { BottomBar, Button, Card, ErrorBox, Hint, Input, Loading, Screen, Title } from '../components/ui';
-import { useCreateGroup, useMyGroups } from '../hooks/useGroups';
-import { t } from '../lib/i18n';
+import { Button, Card, ErrorBox, Hint, Input, Loading, Screen, Title } from '../../components/ui';
+import { useCreateGroup, useMyGroups } from '../../hooks/useGroups';
+import { humanError, t } from '../../lib/i18n';
 
 export default function Home() {
   const router = useRouter();
@@ -26,10 +26,10 @@ export default function Home() {
   return (
     <Screen>
       <Title>{t('home.title')}</Title>
-      {groups.isPending ? (
+      {groups.isLoading ? (
         <Loading />
       ) : groups.isError ? (
-        <ErrorBox message={groups.error.message} onRetry={() => groups.refetch()} />
+        <ErrorBox message={humanError(groups.error.message)} onRetry={() => groups.refetch()} />
       ) : (
         <FlatList
           data={groups.data}
@@ -46,7 +46,6 @@ export default function Home() {
           ListFooterComponent={<Button label={`+ ${t('home.create')}`} ghost onPress={() => setOpen(true)} />}
         />
       )}
-      <BottomBar active="groups" />
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
         <View className="flex-1 justify-end bg-black/30">

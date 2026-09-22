@@ -7,7 +7,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Avatar, Bottom, Button, Card, ErrorBox, FoodDisc, Header, Hint, Loading, NO_OUTLINE, Row, Screen, Section } from '../../../components/ui';
 import { useGroup, useRenameGroup, useRenameMe, useStartSession } from '../../../hooks/useGroups';
-import { foodName, t } from '../../../lib/i18n';
+import { foodName, humanError, t } from '../../../lib/i18n';
 import { inviteUrl } from '../../../lib/links';
 
 export default function Group() {
@@ -21,8 +21,8 @@ export default function Group() {
   const [draft, setDraft] = useState('');
   const [copied, setCopied] = useState(false);
 
-  if (q.isPending) return <Screen><Loading /></Screen>;
-  if (q.isError) return <Screen><ErrorBox message={q.error.message} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isError) return <Screen><ErrorBox message={humanError(q.error.message)} onRetry={() => q.refetch()} /></Screen>;
+  if (!q.data) return <Screen><Loading /></Screen>;
   const { group, members, me, recent, activeSessionId } = q.data;
 
   const copy = async () => {
@@ -91,24 +91,13 @@ export default function Group() {
           {recent.length === 0 && <Hint className="py-3">–</Hint>}
           {recent.map((ml, i) => (
             <Row key={ml.id} last={i === recent.length - 1}>
-              <FoodDisc foodId={ml.food_id} size={40} />
-              <View className="flex-1">
-                <Text className="text-[16px] font-bold text-ink" numberOfLines={1}>{foodName(ml.foods)}</Text>
-                <Hint className="mt-0.5">{new Date(ml.eaten_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })} · {t('common.people', { n: ml.meal_participants.length })}</Hint>
-              </View>
+              <FoodDisc foodId={ml.food_id} size={32} />
+              <Text className="flex-1 text-[16px] font-bold text-ink" numberOfLines={1}>{foodName(ml.foods)}</Text>
+              <Hint>{new Date(ml.eaten_at).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</Hint>
             </Row>
           ))}
         </Card>
 
-        <Card className="mt-3 py-1">
-          <Row onPress={() => router.push({ pathname: '/group/[id]/restrictions', params: { id: group.id } })} last>
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-              <Ionicons name="ban-outline" size={18} color="#1C1C1E" />
-            </View>
-            <Text className="flex-1 text-[16px] text-ink">{t('group.restrictions')}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#8E8E93" />
-          </Row>
-        </Card>
         <View className="h-4" />
       </ScrollView>
 

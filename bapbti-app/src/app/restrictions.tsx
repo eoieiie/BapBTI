@@ -1,57 +1,46 @@
-// 6 못 먹는 거 — 멤버당 1회. 태그 토글 + 음식 직접 추가 + 종류.
+// 못 먹는 거 — 사람에 붙는다. 여기서 한 번 적으면 내 모든 모임에 적용된다 (0007).
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { Bottom, Button, Card, Chip, ErrorBox, FoodDisc, Header, Hint, Input, Loading, Row, Screen, Section } from '../../../components/ui';
-import { useFoods, useGroup } from '../../../hooks/useGroups';
-import { foodName, t } from '../../../lib/i18n';
-import { supabase } from '../../../lib/supabase';
-import { INGREDIENT_TAGS, REQUIREMENT_TAGS } from '../../../lib/tags';
-import type { RestrictionKind, RestrictionRow } from '../../../types/db';
+import { Bottom, Button, Card, Chip, ErrorBox, FoodDisc, Header, Hint, Input, Loading, Row, Screen, Section } from '../components/ui';
+import { useFoods } from '../hooks/useGroups';
+import { useMyRestrictions, type MyRestrictions } from '../hooks/useMyRestrictions';
+import { foodName, humanError, t } from '../lib/i18n';
+import { supabase } from '../lib/supabase';
+import { INGREDIENT_TAGS, REQUIREMENT_TAGS } from '../lib/tags';
+import type { RestrictionKind } from '../types/db';
 
 const KINDS: RestrictionKind[] = ['allergy', 'dislike', 'belief'];
 
 export default function Restrictions() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const group = useGroup(id);
-  const me = group.data?.me ?? null;
-
-  const current = useQuery({
-    queryKey: ['restrictions', me?.id ?? ''],
-    enabled: !!me,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('restrictions').select('*').eq('member_id', me!.id);
-      if (error) throw error;
-      return (data ?? []) as RestrictionRow[];
-    },
-  });
-
-  if (group.isPending || (me && current.isPending)) return <Screen><Loading /></Screen>;
-  if (group.isError) return <Screen><ErrorBox message={group.error.message} /></Screen>;
-  if (!me) return <Screen><ErrorBox message="not a member" /></Screen>;
-  return <Editor key={current.dataUpdatedAt} groupId={id!} initial={current.data ?? []} />;
+  const q = useMyRestrictions();
+  if (q.isError) return <Screen><ErrorBox message={humanError(q.error.message)} onRetry={() => q.refetch()} /></Screen>;
+  if (!q.data) return <Screen><Loading /></Screen>;
+  return <Editor key={q.dataUpdatedAt} initial={q.data} />;
 }
 
-function Editor({ groupId, initial }: { groupId: string; initial: RestrictionRow[] }) {
+function Editor({ initial }: { initial: MyRestrictions }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const foods = useFoods(groupId);
-  const [tags, setTags] = useState<string[]>(() => initial.filter((r) => r.tag).map((r) => r.tag!));
-  const [foodIds, setFoodIds] = useState<string[]>(() => initial.filter((r) => r.food_id).map((r) => r.food_id!));
-  const [kind, setKind] = useState<RestrictionKind>(() => initial[0]?.kind ?? 'dislike');
+  const foods = useFoods(undefined);
+  const [tags, setTags] = useState<string[]>(initial.tags);
+  const [foodIds, setFoodIds] = useState<string[]>(initial.food_ids);
+  const [kind, setKind] = useState<RestrictionKind>(initial.kind);
   const [search, setSearch] = useState('');
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('set_restrictions', { p_group_id: groupId, p_tags: tags, p_food_ids: foodIds, p_kind: kind });
+      const { error } = await supabase.rpc('set_my_restrictions', { p_tags: tags, p_food_ids: foodIds, p_kind: kind });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['restrictions'] });
-      router.back();
+      qc.invalidateQueries({ queryKey: ['session'] });
+      if (router.canGoBack()) router.back();
+      else router.replace({ pathname: '/me' });
     },
   });
 
@@ -61,7 +50,7 @@ function Editor({ groupId, initial }: { groupId: string; initial: RestrictionRow
     return foods.data.filter((f) => !foodIds.includes(f.id) && (f.name.includes(s) || f.name_en.toLowerCase().includes(s))).slice(0, 6);
   }, [search, foods.data, foodIds]);
 
-  const toggle = (arr: string[], v: string, set: (a: string[]) => void) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const toggle = (v: string) => setTags(tags.includes(v) ? tags.filter((x) => x !== v) : [...tags, v]);
   const chosen = foodIds.map((fid) => foods.data?.find((x) => x.id === fid)).filter((f): f is NonNullable<typeof f> => !!f);
 
   return (
@@ -73,7 +62,7 @@ function Editor({ groupId, initial }: { groupId: string; initial: RestrictionRow
         <Section>{t('restrictions.tags')}</Section>
         <View className="flex-row flex-wrap gap-2">
           {[...INGREDIENT_TAGS, ...REQUIREMENT_TAGS].map((tag) => (
-            <Chip key={tag} label={t(`restrictions.tag.${tag}`)} on={tags.includes(tag)} onPress={() => toggle(tags, tag, setTags)} />
+            <Chip key={tag} label={t(`restrictions.tag.${tag}`)} on={tags.includes(tag)} onPress={() => toggle(tag)} />
           ))}
         </View>
 
@@ -83,16 +72,16 @@ function Editor({ groupId, initial }: { groupId: string; initial: RestrictionRow
           <Card className="mt-2 py-1">
             {hits.map((f, i) => (
               <Row key={f.id} onPress={() => { setFoodIds([...foodIds, f.id]); setSearch(''); }} last={i === hits.length - 1 && chosen.length === 0}>
-                <FoodDisc foodId={f.id} size={40} />
+                <FoodDisc foodId={f.id} size={36} />
                 <Text className="flex-1 text-[16px] text-ink">{foodName(f)}</Text>
                 <Ionicons name="add" size={20} color="#8E8E93" />
               </Row>
             ))}
             {chosen.map((f, i) => (
               <Row key={f.id} last={i === chosen.length - 1}>
-                <FoodDisc foodId={f.id} size={40} />
+                <FoodDisc foodId={f.id} size={36} />
                 <Text className="flex-1 text-[16px] font-bold text-ink">{foodName(f)}</Text>
-                <Pressable accessibilityRole="button" onPress={() => setFoodIds(foodIds.filter((x) => x !== f.id))} className="h-10 w-10 items-center justify-center">
+                <Pressable accessibilityRole="button" accessibilityLabel={t('common.cancel')} onPress={() => setFoodIds(foodIds.filter((x) => x !== f.id))} className="h-10 w-10 items-center justify-center">
                   <Ionicons name="close" size={20} color="#8E8E93" />
                 </Pressable>
               </Row>

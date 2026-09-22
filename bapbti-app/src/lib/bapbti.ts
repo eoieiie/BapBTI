@@ -25,3 +25,15 @@ export function topFood(counts: readonly { food_id: string; n: number }[]): { fo
   for (const c of counts) if (!best || c.n > best.n) best = c;
   return best;
 }
+
+/**
+ * 레벨 — 총 끼니 수. 삼각수(1,3,6,10,15…)라 처음엔 금방 오르고 뒤로 갈수록 느려진다.
+ * 자랑거리는 레벨 숫자보다 "무엇을 몇 번 먹었나"라서, 레벨은 한 줄만 차지한다.
+ */
+export function level(total: number): { level: number; into: number; need: number } {
+  let lv = 1;
+  while ((lv * (lv + 1)) / 2 <= total) lv++;
+  const base = ((lv - 1) * lv) / 2;
+  const next = (lv * (lv + 1)) / 2;
+  return { level: lv, into: total - base, need: next - base };
+}
