@@ -1,4 +1,5 @@
 // 설정 — 출시에 필요한 기본기. 계정 상태, 약관, 계정 삭제, 버전.
+import { TAB_BAR_SPACE } from '../../components/FloatingTabBar';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
@@ -50,7 +51,7 @@ export default function Settings() {
   return (
     <Screen>
       <Title>{t('settings.title')}</Title>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE }}>
         <Section>{t('settings.account')}</Section>
         <Card className="py-1">
           <Row last>

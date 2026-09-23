@@ -1,4 +1,5 @@
 // 내 밥비티아이 — 프로필. 자랑할 수 있게 한 장으로 공유된다. 전부 meals 파생.
+import { TAB_BAR_SPACE } from '../../components/FloatingTabBar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
@@ -50,7 +51,7 @@ export default function Me() {
   return (
     <Screen>
       <Title>{t('me.title')}</Title>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE }}>
         {/* 자랑용 한 장 — 이 영역이 그대로 이미지로 나간다 */}
         <ViewShot ref={shot} options={{ format: 'png', quality: 1 }} style={{ backgroundColor: '#F2F4F6' }}>
           <Card>
@@ -101,7 +102,7 @@ export default function Me() {
             <Card className="py-1">
               {d.people.map((p, i) => (
                 <Row key={p.member.id} last={i === d.people.length - 1}>
-                  <Avatar name={p.member.display_name} size={32} />
+                  <Avatar name={p.member.display_name} size={34} label={false} />
                   <Text className="flex-1 text-[16px] text-ink">{p.member.display_name}</Text>
                   <Hint>{t('me.times', { n: p.n })}</Hint>
                 </Row>

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Modal, Pressable, Text, View } from 'react-native';
 
+import { TAB_BAR_SPACE } from '../../components/FloatingTabBar';
 import { Button, Card, ErrorBox, Hint, Input, Loading, Screen, Title } from '../../components/ui';
 import { useCreateGroup, useMyGroups } from '../../hooks/useGroups';
 import { humanError, t } from '../../lib/i18n';
@@ -43,6 +44,7 @@ export default function Home() {
               </Card>
             </Pressable>
           )}
+          contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE }}
           ListFooterComponent={<Button label={`+ ${t('home.create')}`} ghost onPress={() => setOpen(true)} />}
         />
       )}

@@ -95,13 +95,18 @@ export function Chip({ label, on, onPress }: { label: string; on?: boolean; onPr
   );
 }
 
-export function Avatar({ name, dim, size = 40 }: { name: string; dim?: boolean; size?: number }) {
+/** 이름 첫 글자 동그라미. 이름을 옆에 따로 쓸 자리면 label={false}. */
+export function Avatar({ name, dim, size = 40, label = true }: { name: string; dim?: boolean; size?: number; label?: boolean }) {
   const initial = name.trim().slice(0, 1).toUpperCase();
+  const circle = (
+    <View style={{ width: size, height: size, borderRadius: size / 2 }} className="items-center justify-center bg-white">
+      <Text className="text-[15px] font-bold text-ink">{initial}</Text>
+    </View>
+  );
+  if (!label) return <View className={dim ? 'opacity-40' : ''}>{circle}</View>;
   return (
     <View className={`items-center ${dim ? 'opacity-40' : ''}`} style={{ width: size + 12 }}>
-      <View style={{ width: size, height: size, borderRadius: size / 2 }} className="items-center justify-center bg-white">
-        <Text className="text-[15px] font-bold text-ink">{initial}</Text>
-      </View>
+      {circle}
       <Text numberOfLines={1} className="mt-1 text-[11px] text-sub">{name}</Text>
     </View>
   );
