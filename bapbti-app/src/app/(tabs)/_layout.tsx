@@ -23,6 +23,10 @@ export default function TabsLayout() {
         name="me"
         options={{ title: t('tabs.me'), tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} /> }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: t('tabs.settings'), tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'settings' : 'settings-outline'} size={22} color={color} /> }}
+      />
     </Tabs>
   );
 }

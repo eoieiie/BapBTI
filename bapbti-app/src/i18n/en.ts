@@ -1,8 +1,24 @@
 import type { Messages } from './ko';
 
 export const en: Messages = {
+  settings: {
+    title: 'Settings',
+    account: 'Account',
+    anonymous: 'Stored on this device only',
+    signInHint: 'Sign-in is coming. For now, deleting the app deletes your meals',
+    legal: 'Legal',
+    privacy: 'Privacy policy',
+    terms: 'Terms of use',
+    danger: 'Account',
+    deleteAccount: 'Delete account',
+    deleteWarn: 'Your meals, groups and restrictions all go. This cannot be undone',
+    deleteConfirmTitle: 'Delete everything?',
+    deleteConfirmBody: 'All your meal history on this device is gone for good',
+    deleted: 'Deleted',
+    version: 'Version',
+  },
   common: { back: 'Back', save: 'Save', cancel: 'Cancel', add: 'Add', share: 'Share', loading: 'Loading', error: 'Something went wrong', retry: 'Retry', notMember: 'Join this group first', home: 'Home', people: '%{n} people', nth: '#%{n}', nthSuffix: 'th' },
-  tabs: { groups: 'Groups', me: 'My BapBTI' },
+  tabs: { groups: 'Groups', me: 'My BapBTI', settings: 'Settings' },
   home: { title: 'My groups', create: 'New group', empty: 'No groups yet', createTitle: 'New group', groupName: 'Group name', yourName: 'Your name', recent: 'Last' },
   group: { members: '%{n} members', start: "What's for lunch?", recent: 'Recent meals', restrictions: "Things I can't eat", copyLink: 'Copy invite link', copied: 'Copied. Paste it in your chat', rename: 'Rename', yourName: 'Your name' },
   invite: { title: "You're invited to %{name}", who: 'Which one is you?', orNew: 'or', namePlaceholder: 'Type your name', join: 'Join', noLogin: 'No login. This device will remember you', notFound: 'This invite link is broken', taken: 'Someone already took that name' },
