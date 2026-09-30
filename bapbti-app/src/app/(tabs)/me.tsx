@@ -10,6 +10,8 @@ import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 import { Avatar, Button, Card, ErrorBox, FoodDisc, Hint, Loading, Row, Screen, Section, Title } from '../../components/ui';
 import { useMe } from '../../hooks/useMe';
 import { useMyRestrictions } from '../../hooks/useMyRestrictions';
+import { useProfile } from '../../hooks/useProfile';
+import { typeCode } from '../../lib/quiz';
 import { level } from '../../lib/bapbti';
 import { foodColor } from '../../lib/foodColor';
 import { foodName, humanError, t } from '../../lib/i18n';
@@ -20,6 +22,7 @@ export default function Me() {
   const me = useMe();
   const router = useRouter();
   const restrictions = useMyRestrictions();
+  const profile = useProfile();
   const shot = useRef<ViewShotRef>(null);
   const [sharing, setSharing] = useState(false);
 
@@ -28,12 +31,14 @@ export default function Me() {
 
   const d = me.data;
   const lv = level(d.total);
-  const title = d.top && d.top.n >= 3 ? t('me.authority', { food: foodName(d.top.food) }) : d.total === 0 ? t('me.newbie') : t(`me.types.${d.type}`);
+  const code = typeCode(profile.data?.axes);
+  // 네 글자가 정체성이고, 최다 음식은 그 아래 한 줄로 붙는다
+  const subtitle = d.top && d.top.n >= 3 ? t('me.authority', { food: foodName(d.top.food) }) : null;
   const accent = d.top && d.top.n >= 3 ? foodColor(d.top.food.id) : TYPE_COLOR[d.type];
   const tags = restrictions.data?.tags ?? [];
 
   const share = async () => {
-    const text = [title, t('me.total') + ' ' + d.total, t('me.dogam', { n: d.distinct, total: d.catalogSize }), '— 밥비티아이'].join('\n');
+    const text = [code, subtitle ?? '', t('me.total') + ' ' + d.total, t('me.dogam', { n: d.distinct, total: d.catalogSize }), '— 밥비티아이'].join('\n');
     if (Platform.OS === 'web' || !shot.current) {
       await Share.share({ message: text });
       return;
@@ -63,7 +68,10 @@ export default function Me() {
               <View className="h-full rounded-full" style={{ width: `${Math.round((lv.into / lv.need) * 100)}%`, backgroundColor: accent }} />
             </View>
 
-            <Text className="mt-5 text-[30px] font-bold leading-[36px] text-ink" numberOfLines={2}>{title}</Text>
+            <Text className="mt-5 text-[46px] font-bold tracking-[3px] text-ink">{code}</Text>
+            <Text className="mt-1 text-[15px] font-bold text-sub" numberOfLines={1}>
+              {[profile.data?.display_name, subtitle].filter(Boolean).join(' · ')}
+            </Text>
 
             <View className="mt-6 flex-row">
               <Stat n={String(d.total)} label={t('me.total')} />

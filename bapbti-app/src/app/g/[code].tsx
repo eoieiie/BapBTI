@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 
 import { Bottom, Button, Chip, ErrorBox, Hint, Input, Loading, Screen } from '../../components/ui';
 import { useGroupByCode, useJoinGroup } from '../../hooks/useGroups';
+import { useProfile } from '../../hooks/useProfile';
 import { humanError, t } from '../../lib/i18n';
 
 export default function Invite() {
@@ -12,6 +13,8 @@ export default function Invite() {
   const router = useRouter();
   const q = useGroupByCode(code);
   const join = useJoinGroup();
+  const profile = useProfile();
+  const savedName = profile.data?.display_name ?? '';
   const [picked, setPicked] = useState<string | null>(null);
   const [name, setName] = useState('');
 
@@ -22,7 +25,7 @@ export default function Invite() {
   const go = async () => {
     if (!q.data) return;
     try {
-      await join.mutateAsync(picked ? { code: code!, memberId: picked } : { code: code!, displayName: name.trim() });
+      await join.mutateAsync(picked ? { code: code!, memberId: picked } : { code: code!, displayName: (name.trim() || savedName) });
     } catch {
       return;
     }
@@ -41,13 +44,13 @@ export default function Invite() {
   if (alreadyIn) return <Screen><Loading /></Screen>;
 
   const free = q.data.members.filter((m) => !m.claimed);
-  const canGo = !!picked || name.trim().length > 0;
+  const canGo = !!picked || name.trim().length > 0 || savedName.length > 0;
 
   return (
     <Screen>
       <View className="flex-1 pt-8">
         <Text className="text-[28px] font-bold leading-[36px] text-ink">{t('invite.title', { name: q.data.name })}</Text>
-        <Text className="mt-6 text-[15px] font-bold text-sub">{t('invite.who')}</Text>
+        <Text className="mt-6 text-[15px] font-bold text-sub">{savedName ? t('invite.asMe', { name: savedName }) : t('invite.who')}</Text>
         {free.length > 0 && (
           <View className="mt-3 flex-row flex-wrap gap-2">
             {free.map((m) => (

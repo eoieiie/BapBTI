@@ -1,6 +1,21 @@
 import type { Messages } from './ko';
 
 export const en: Messages = {
+  onboarding: {
+    nameTitle: 'What should we call you?',
+    nameHint: 'This is the name your group sees',
+    namePlaceholder: 'Name',
+    start: 'Start',
+    resultLabel: "%{name}'s BapBTI",
+    done: 'Get started',
+    grows: 'These four letters get sharper the more you eat',
+    axis: {
+      explore: { pos: 'Tries the new thing first', neg: 'Orders the same thing again' },
+      spice: { pos: 'Goes looking for spicy', neg: 'Picks the mild one' },
+      korean: { pos: 'Comes back to Korean food', neg: 'Leans foreign' },
+      lead: { pos: 'Throws out a suggestion', neg: 'Goes with whatever is decided' },
+    },
+  },
   settings: {
     title: 'Settings',
     account: 'Account',
@@ -21,7 +36,7 @@ export const en: Messages = {
   tabs: { groups: 'Groups', me: 'My BapBTI', settings: 'Settings' },
   home: { title: 'My groups', create: 'New group', empty: 'No groups yet', createTitle: 'New group', groupName: 'Group name', yourName: 'Your name', recent: 'Last' },
   group: { members: '%{n} members', start: "What's for lunch?", recent: 'Recent meals', restrictions: "Things I can't eat", copyLink: 'Copy invite link', copied: 'Copied. Paste it in your chat', rename: 'Rename', yourName: 'Your name' },
-  invite: { title: "You're invited to %{name}", who: 'Which one is you?', orNew: 'or', namePlaceholder: 'Type your name', join: 'Join', noLogin: 'No login. This device will remember you', notFound: 'This invite link is broken', taken: 'Someone already took that name' },
+  invite: { title: "You're invited to %{name}", who: 'Which one is you?', asMe: 'Joining as %{name}', orNew: 'or', namePlaceholder: 'Type your name', join: 'Join', noLogin: 'No login. This device will remember you', notFound: 'This invite link is broken', taken: 'Someone already took that name' },
   session: {
     title: "What's for lunch?",
     status: { open: 'Collecting options', voting: 'Voting', done: 'Decided' },

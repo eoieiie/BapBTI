@@ -1,4 +1,19 @@
 export const ko = {
+  onboarding: {
+    nameTitle: '뭐라고 부를까?',
+    nameHint: '모임에서 이 이름으로 보여',
+    namePlaceholder: '이름',
+    start: '시작',
+    resultLabel: '%{name}의 밥비티아이',
+    done: '시작하기',
+    grows: '밥을 먹을수록 이 네 글자가 확실해져',
+    axis: {
+      explore: { pos: '새로운 거 먼저 먹어보는 쪽', neg: '먹던 거 또 먹는 쪽' },
+      spice: { pos: '매운 거 찾아가는 쪽', neg: '순한 거 고르는 쪽' },
+      korean: { pos: '결국 한식으로 돌아오는 쪽', neg: '외국 음식 쪽' },
+      lead: { pos: '메뉴를 던지는 쪽', neg: '정해지면 따라가는 쪽' },
+    },
+  },
   settings: {
     title: '설정',
     account: '계정',
@@ -19,7 +34,7 @@ export const ko = {
   tabs: { groups: '모임', me: '내 밥비티아이', settings: '설정' },
   home: { title: '내 모임', create: '모임 만들기', empty: '아직 모임이 없어', createTitle: '새 모임', groupName: '모임 이름', yourName: '내 이름', recent: '최근' },
   group: { members: '멤버 %{n}', start: '오늘 뭐먹지', recent: '최근 기록', restrictions: '못 먹는 거 설정', copyLink: '초대 링크 복사', copied: '복사됐어. 카톡에 붙여넣어', rename: '이름 바꾸기', yourName: '내 이름' },
-  invite: { title: '%{name}에 초대됐어', who: '너 누구야?', orNew: '또는', namePlaceholder: '이름 입력', join: '참여하기', noLogin: '로그인 없음. 이 기기에 기억돼', notFound: '초대 링크가 잘못됐어', taken: '이미 누가 잡은 이름이야' },
+  invite: { title: '%{name}에 초대됐어', who: '너 누구야?', asMe: '%{name}(으)로 들어갈게', orNew: '또는', namePlaceholder: '이름 입력', join: '참여하기', noLogin: '로그인 없음. 이 기기에 기억돼', notFound: '초대 링크가 잘못됐어', taken: '이미 누가 잡은 이름이야' },
   session: {
     title: '오늘 뭐먹지',
     status: { open: '후보 모으는 중', voting: '투표 중', done: '결정됨' },
