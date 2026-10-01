@@ -7,13 +7,20 @@ import * as Updates from 'expo-updates';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, Text, View } from 'react-native';
 
-import { Card, Hint, Row, Screen, Section, Title } from '../../components/ui';
+import { HandleField } from '../../components/HandleField';
+import { Button, Card, Hint, Row, Screen, Section, Title } from '../../components/ui';
+import { useProfile, useSetHandle } from '../../hooks/useProfile';
 import { supabase } from '../../lib/supabase';
 import { t } from '../../lib/i18n';
 
 export default function Settings() {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const profile = useProfile();
+  const setHandle = useSetHandle();
+  const [editing, setEditing] = useState(false);
+  const [handle, setHandleValue] = useState('');
+  const [handleOk, setHandleOk] = useState(false);
 
   const version = Constants.expoConfig?.version ?? '?';
   const build = Constants.expoConfig?.ios?.buildNumber ?? '';
@@ -54,6 +61,44 @@ export default function Settings() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SPACE }}>
         <Section>{t('settings.account')}</Section>
         <Card className="py-1">
+          <Row onPress={editing ? undefined : () => { setHandleValue(profile.data?.handle ?? ''); setEditing(true); }}>
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-gray-100">
+              <Ionicons name="at-outline" size={17} color="#1C1C1E" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[15px] font-bold text-ink">
+                {profile.data?.handle ? `@${profile.data.handle}` : t('settings.handleNone')}
+              </Text>
+              <Hint className="mt-0.5">{t('settings.handle')}</Hint>
+            </View>
+            {!editing && <Ionicons name="chevron-forward" size={17} color="#8E8E93" />}
+          </Row>
+          {editing && (
+            <View className="pb-3">
+              <HandleField key={profile.data?.handle ?? 'new'} value={handle} onChange={setHandleValue} onStateChange={setHandleOk} />
+              <View className="mt-3 flex-row gap-2">
+                <View className="flex-1">
+                  <Button label={t('common.cancel')} ghost onPress={() => setEditing(false)} />
+                </View>
+                <View className="flex-1">
+                  <Button
+                    label={t('common.save')}
+                    primary
+                    disabled={!handleOk}
+                    loading={setHandle.isPending}
+                    onPress={async () => {
+                      try {
+                        await setHandle.mutateAsync(handle);
+                        setEditing(false);
+                      } catch {
+                        /* 중복이면 HandleField 가 알려준다 */
+                      }
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
           <Row last>
             <View className="h-9 w-9 items-center justify-center rounded-full bg-gray-100">
               <Ionicons name="person-outline" size={17} color="#1C1C1E" />

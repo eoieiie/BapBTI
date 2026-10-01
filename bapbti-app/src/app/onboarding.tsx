@@ -5,7 +5,9 @@ import { useRouter } from 'expo-router';
 
 import { Reveal } from '../components/Reveal';
 import { Bottom, Button, Hint, Input, Screen } from '../components/ui';
-import { useSaveProfile } from '../hooks/useProfile';
+import { useSaveProfile, useSetHandle } from '../hooks/useProfile';
+import { HandleField } from '../components/HandleField';
+import { suggestHandle } from '../lib/handle';
 import { t } from '../lib/i18n';
 import { AXES, AXIS_LETTERS, QUESTIONS, scoreAxes, typeCode, type Answers } from '../lib/quiz';
 
@@ -13,7 +15,10 @@ export default function Onboarding() {
   const router = useRouter();
   const save = useSaveProfile();
   const [name, setName] = useState('');
-  const [step, setStep] = useState(-1); // -1 이름, 0..7 문항, 8 결과
+  const [step, setStep] = useState(-1); // -1 이름, 0..7 문항, 8 결과, 9 아이디
+  const setHandle = useSetHandle();
+  const [handle, setHandleValue] = useState('');
+  const [handleOk, setHandleOk] = useState(false);
   const [answers, setAnswers] = useState<Answers>({});
 
   const axes = scoreAxes(answers);
@@ -25,8 +30,21 @@ export default function Onboarding() {
     setStep(step + 1);
   };
 
-  const finish = async () => {
+  // 결과를 먼저 저장하고 아이디 단계로. 여기서 나가도 프로필은 남는다.
+  const toHandleStep = async () => {
     await save.mutateAsync({ displayName: name.trim(), quiz: answers, axes });
+    setHandleValue(suggestHandle(name));
+    setStep(QUESTIONS.length + 1);
+  };
+
+  const finish = async () => {
+    if (handleOk) {
+      try {
+        await setHandle.mutateAsync(handle);
+      } catch {
+        return; // 저장 직전에 누가 채갔다 — 화면에 남아서 다시 고르게 둔다
+      }
+    }
     router.replace('/');
   };
 
@@ -85,6 +103,25 @@ export default function Onboarding() {
     );
   }
 
+  // 4) 아이디
+  if (step > QUESTIONS.length) {
+    return (
+      <Screen>
+        <View className="flex-1 justify-center">
+          <Text className="text-[30px] font-bold leading-[38px] text-ink">{t('onboarding.handleTitle')}</Text>
+          <View className="mt-6">
+            <HandleField key={`h-${step}`} value={handle} onChange={setHandleValue} onStateChange={setHandleOk} />
+          </View>
+          {setHandle.isError && <Hint className="mt-2 text-accent">{t('onboarding.handleTaken')}</Hint>}
+        </View>
+        <Bottom>
+          <Button label={t('onboarding.done')} primary disabled={!handleOk} loading={setHandle.isPending} onPress={finish} />
+          <Button label={t('onboarding.skipHandle')} ghost className="mt-1" onPress={() => router.replace('/')} />
+        </Bottom>
+      </Screen>
+    );
+  }
+
   // 3) 결과
   return (
     <Screen>
@@ -111,7 +148,7 @@ export default function Onboarding() {
       </View>
       <Bottom>
         {save.isError && <Hint className="mb-2 text-center">{save.error.message}</Hint>}
-        <Button label={t('onboarding.done')} primary loading={save.isPending} onPress={finish} />
+        <Button label={t('onboarding.next')} primary loading={save.isPending} onPress={toHandleStep} />
       </Bottom>
     </Screen>
   );

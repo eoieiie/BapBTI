@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { Answers, Axes } from '../lib/quiz';
+import { currentUserId } from '../lib/currentUser';
 import { supabase } from '../lib/supabase';
 
 export interface MyProfile {
@@ -20,6 +21,27 @@ export function useProfile() {
       const { data, error } = await supabase.rpc('get_my_profile');
       if (error) throw error;
       return (data as MyProfile | null) ?? null;
+    },
+  });
+}
+
+/** 핸들이 비어 있는지 확인. profiles 는 로그인한 사람이면 읽을 수 있어서(0009) 바로 조회한다. */
+export async function isHandleTaken(handle: string): Promise<boolean> {
+  const { data, error } = await supabase.from('profiles').select('user_id').eq('handle', handle).maybeSingle();
+  if (error) throw error;
+  const { data: auth } = await supabase.auth.getUser();
+  return !!data && data.user_id !== auth.user?.id; // 내 핸들이면 '사용 중'이 아니다
+}
+
+export function useSetHandle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (handle: string) => {
+      const { error } = await supabase.from('profiles').update({ handle }).eq('user_id', currentUserId() ?? '');
+      if (error) throw error;
+    },
+    onSuccess: (_d, handle) => {
+      qc.setQueryData<MyProfile | null>(profileKey, (old) => (old ? { ...old, handle } : old));
     },
   });
 }

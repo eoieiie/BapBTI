@@ -70,7 +70,7 @@ export default function Me() {
 
             <Text className="mt-5 text-[46px] font-bold tracking-[3px] text-ink">{code}</Text>
             <Text className="mt-1 text-[15px] font-bold text-sub" numberOfLines={1}>
-              {[profile.data?.display_name, subtitle].filter(Boolean).join(' · ')}
+              {[profile.data?.handle ? `@${profile.data.handle}` : profile.data?.display_name, subtitle].filter(Boolean).join(' · ')}
             </Text>
 
             <View className="mt-6 flex-row">
