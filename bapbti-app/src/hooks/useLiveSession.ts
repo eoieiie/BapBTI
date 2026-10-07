@@ -31,7 +31,8 @@ export interface LiveSession {
   candidates: SessionCandidate[];
   votes: VoteRow[];
   isHost: boolean;
-  /** 화면이 쓰는 파생값 — 여기서 한 번만 계산해서 각 단계 컴포넌트는 그대로 쓴다. */
+  /** 화면이 쓰는 파생값 — 여기서 한 번만 계산해서 각 단계 컴포넌트는 그대로 쓴다.
+   *  votes 는 RLS 로 **내 표만** 온다(0010). 남이 무엇을 찍었는지는 클라이언트가 알 수 없다. */
   nameOf: (memberId: string) => string;
   myVotes: string[];
   votedMembers: number;
@@ -39,7 +40,7 @@ export interface LiveSession {
 }
 
 /** 룰렛에 그릴 조각들. 서버가 고른 당첨 후보가 빠져 있으면 끼워 넣는다 — 규칙이 어긋나도 화면은 안 깨지게. */
-function buildWheel(candidates: SessionCandidate[], votes: VoteRow[], decidedFoodId: string | null): LiveSession['wheel'] {
+function buildWheel(candidates: SessionCandidate[], votes: { food_id: string }[], decidedFoodId: string | null): LiveSession['wheel'] {
   const pool = roulettePool(candidates, votes);
   if (decidedFoodId && !pool.includes(decidedFoodId)) pool.push(decidedFoodId);
   const byId = new Map(candidates.map((c) => [c.food_id, c.foods]));
@@ -74,6 +75,13 @@ export function useLiveSession(id: string | undefined) {
       if (e2) throw e2;
       if (e3) throw e3;
       if (e4) throw e4;
+      // 룰렛 조각: 결과가 나온 판에서만 서버가 "1표 이상 받은 음식"을 준다 (누가 찍었는지는 안 준다)
+      let votedFoods: string[] = [];
+      if (s.status === 'done') {
+        const { data: vf, error: e5 } = await supabase.rpc('session_voted_foods', { p_session_id: s.id });
+        if (e5) throw e5;
+        votedFoods = ((vf ?? []) as string[]).map(String);
+      }
       const ms = (members ?? []) as MemberRow[];
       const uid = currentUserId();
       const me = ms.find((m) => m.user_id === uid) ?? null;
@@ -90,8 +98,8 @@ export function useLiveSession(id: string | undefined) {
         isHost: !!me && me.id === s.started_by,
         nameOf: (memberId: string) => nameById.get(memberId) ?? '?',
         myVotes: me ? vs.filter((v) => v.member_id === me.id).map((v) => v.food_id) : [],
-        votedMembers: new Set(vs.map((v) => v.member_id)).size,
-        wheel: buildWheel(cs, vs, s.decided_food_id),
+        votedMembers: ((participants ?? []) as ParticipantRow[]).filter((p) => p.voted).length,
+        wheel: buildWheel(cs, votedFoods.map((food_id) => ({ food_id })), s.decided_food_id),
       };
     },
   });

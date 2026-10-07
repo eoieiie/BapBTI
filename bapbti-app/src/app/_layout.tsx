@@ -73,7 +73,8 @@ function OnboardingGate() {
   useEffect(() => {
     if (profile.isLoading || profile.isError) return;
     const needs = !profile.data?.display_name;
-    const exempt = first === 'g' || first === 'onboarding';
+    // 초대 링크, 온보딩 자체, 그리고 약관 — 앱스토어 심사관이 개인정보처리방침 URL 을 바로 연다
+    const exempt = first === 'g' || first === 'onboarding' || first === 'privacy' || first === 'terms';
     if (needs && !exempt) router.replace('/onboarding');
   }, [profile.isLoading, profile.isError, profile.data?.display_name, first, router]);
 

@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 
 import { Reveal } from '../components/Reveal';
 import { Bottom, Button, Hint, Input, Screen } from '../components/ui';
-import { useSaveProfile, useSetHandle } from '../hooks/useProfile';
+import { useProfile, useSaveProfile, useSetHandle } from '../hooks/useProfile';
 import { HandleField } from '../components/HandleField';
 import { suggestHandle } from '../lib/handle';
 import { t } from '../lib/i18n';
@@ -14,8 +14,10 @@ import { AXES, AXIS_LETTERS, QUESTIONS, scoreAxes, typeCode, type Answers } from
 export default function Onboarding() {
   const router = useRouter();
   const save = useSaveProfile();
-  const [name, setName] = useState('');
-  const [step, setStep] = useState(-1); // -1 이름, 0..7 문항, 8 결과, 9 아이디
+  const existing = useProfile().data?.display_name ?? '';
+  const [name, setName] = useState(existing);
+  // 링크로 들어와 이름이 이미 있는 사람은 바로 문항부터
+  const [step, setStep] = useState(existing ? 0 : -1); // -1 이름, 0..7 문항, 8 결과, 9 아이디
   const setHandle = useSetHandle();
   const [handle, setHandleValue] = useState('');
   const [handleOk, setHandleOk] = useState(false);

@@ -58,7 +58,7 @@ export const ko = {
     title: '내 밥비티아이', typeLabel: '타입 · 라벨은 임시',
     types: { authority: '권위자형', explorer: '도감형', balanced: '균형형', unknown: '아직 몰라' },
     typeHint: { authority: '먹던 거 또 먹는 사람', explorer: '새 거 먼저 먹어보는 사람', balanced: '그때그때', unknown: '3끼만 더 먹으면 나와' },
-    axisRepeat: '반복', axisExplore: '탐험', level: 'Lv.%{n}', levelNeed: '%{n}끼 더 먹으면 Lv.%{next}', authority: '%{food} 권위자', newbie: '이제 시작', shareProfile: '자랑하기', withPeople: '%{n}명이랑', total: '총 끼니', top: '최다', distinct: '고유 음식', dogam: '도감 %{n} / %{total}', people: '같이 먹은 사람', times: '%{n}번',
+    axisRepeat: '반복', axisExplore: '탐험', level: 'Lv.%{n}', takeQuiz: '내 네 글자 만들기', takeQuizHint: '8문항, 30초면 돼', levelNeed: '%{n}끼 더 먹으면 Lv.%{next}', authority: '%{food} 권위자', newbie: '이제 시작', shareProfile: '자랑하기', withPeople: '%{n}명이랑', total: '총 끼니', top: '최다', distinct: '고유 음식', dogam: '도감 %{n} / %{total}', people: '같이 먹은 사람', times: '%{n}번',
     noMeals: '아직 기록이 없어. 모임에서 오늘 뭐먹지 눌러봐',
   },
   restrictions: {

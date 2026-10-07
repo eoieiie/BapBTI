@@ -48,7 +48,12 @@ export function scoreAxes(answers: Answers): Axes {
   return out;
 }
 
-/** 네 글자 코드. 0(동점)이면 축의 앞글자를 쓴다 — 코드는 언제나 네 글자여야 한다. */
+/** 테스트를 했는가. 링크로 들어온 사람은 이름만 있고 축이 없다. */
+export function hasTakenQuiz(axes: Partial<Axes> | null | undefined): boolean {
+  return !!axes && AXES.every((a) => typeof axes[a] === 'number');
+}
+
+/** 네 글자 코드. 0(동점)이면 축의 앞글자를 쓴다. 테스트 전이면 부르지 말 것 — hasTakenQuiz 로 먼저 거른다. */
 export function typeCode(axes: Partial<Axes> | null | undefined): string {
   return AXES.map((a) => {
     const v = axes?.[a] ?? 0;

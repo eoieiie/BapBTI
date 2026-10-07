@@ -60,7 +60,7 @@ export const en: Messages = {
     title: 'My BapBTI', typeLabel: 'Type · labels are temporary',
     types: { authority: 'The Regular', explorer: 'The Explorer', balanced: 'The Balanced', unknown: 'Not yet' },
     typeHint: { authority: 'Orders the same thing again', explorer: 'Tries the new thing first', balanced: 'Depends on the day', unknown: '3 more meals and you will know' },
-    axisRepeat: 'Repeat', axisExplore: 'Explore', level: 'Lv.%{n}', levelNeed: '%{n} more meals to Lv.%{next}', authority: '%{food} regular', newbie: 'Just started', shareProfile: 'Show off', withPeople: 'with %{n}', total: 'Meals', top: 'Most', distinct: 'Distinct', dogam: 'Collection %{n} / %{total}', people: 'Eaten with', times: '%{n}×',
+    axisRepeat: 'Repeat', axisExplore: 'Explore', level: 'Lv.%{n}', takeQuiz: 'Get your four letters', takeQuizHint: '8 questions, 30 seconds', levelNeed: '%{n} more meals to Lv.%{next}', authority: '%{food} regular', newbie: 'Just started', shareProfile: 'Show off', withPeople: 'with %{n}', total: 'Meals', top: 'Most', distinct: 'Distinct', dogam: 'Collection %{n} / %{total}', people: 'Eaten with', times: '%{n}×',
     noMeals: "No meals yet. Open a group and hit What's for lunch?",
   },
   restrictions: {

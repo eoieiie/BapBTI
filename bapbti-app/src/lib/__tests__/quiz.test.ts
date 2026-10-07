@@ -1,4 +1,4 @@
-import { QUESTIONS, scoreAxes, typeCode, AXES } from '../quiz';
+import { QUESTIONS, scoreAxes, typeCode, AXES, hasTakenQuiz } from '../quiz';
 
 describe('문항 구성', () => {
   it('축마다 2문항', () => {
@@ -28,5 +28,14 @@ describe('scoreAxes / typeCode', () => {
   it('답이 없어도 네 글자가 나온다', () => {
     expect(typeCode(null)).toHaveLength(4);
     expect(typeCode({})).toBe('탐매한주');
+  });
+});
+
+describe('hasTakenQuiz', () => {
+  it('축 네 개가 다 있어야 테스트한 것', () => {
+    expect(hasTakenQuiz(null)).toBe(false);
+    expect(hasTakenQuiz({})).toBe(false);
+    expect(hasTakenQuiz({ explore: 1, spice: 0, korean: -1 })).toBe(false);
+    expect(hasTakenQuiz({ explore: 1, spice: 0, korean: -1, lead: 0 })).toBe(true);
   });
 });

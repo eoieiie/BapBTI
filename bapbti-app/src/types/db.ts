@@ -47,6 +47,8 @@ export interface ParticipantRow {
   session_id: Uuid;
   member_id: Uuid;
   joined_at: string;
+  /** 투표를 했는가(무엇을 찍었는지가 아니라). 진행률용, 0010 */
+  voted: boolean;
 }
 export interface CandidateRow {
   id: Uuid;

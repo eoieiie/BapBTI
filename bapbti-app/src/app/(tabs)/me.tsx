@@ -4,14 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useRef, useState } from 'react';
-import { Platform, ScrollView, Share, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, Text, View } from 'react-native';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
 import { Avatar, Button, Card, ErrorBox, FoodDisc, Hint, Loading, Row, Screen, Section, Title } from '../../components/ui';
 import { useMe } from '../../hooks/useMe';
 import { useMyRestrictions } from '../../hooks/useMyRestrictions';
 import { useProfile } from '../../hooks/useProfile';
-import { typeCode } from '../../lib/quiz';
+import { hasTakenQuiz, typeCode } from '../../lib/quiz';
 import { level } from '../../lib/bapbti';
 import { foodColor } from '../../lib/foodColor';
 import { foodName, humanError, t } from '../../lib/i18n';
@@ -31,14 +31,15 @@ export default function Me() {
 
   const d = me.data;
   const lv = level(d.total);
-  const code = typeCode(profile.data?.axes);
+  const quizDone = hasTakenQuiz(profile.data?.axes);
+  const code = quizDone ? typeCode(profile.data?.axes) : null;
   // 네 글자가 정체성이고, 최다 음식은 그 아래 한 줄로 붙는다
   const subtitle = d.top && d.top.n >= 3 ? t('me.authority', { food: foodName(d.top.food) }) : null;
   const accent = d.top && d.top.n >= 3 ? foodColor(d.top.food.id) : TYPE_COLOR[d.type];
   const tags = restrictions.data?.tags ?? [];
 
   const share = async () => {
-    const text = [code, subtitle ?? '', t('me.total') + ' ' + d.total, t('me.dogam', { n: d.distinct, total: d.catalogSize }), '— 밥비티아이'].join('\n');
+    const text = [code ?? '', subtitle ?? '', t('me.total') + ' ' + d.total, t('me.dogam', { n: d.distinct, total: d.catalogSize }), '— 밥비티아이'].join('\n');
     if (Platform.OS === 'web' || !shot.current) {
       await Share.share({ message: text });
       return;
@@ -68,7 +69,14 @@ export default function Me() {
               <View className="h-full rounded-full" style={{ width: `${Math.round((lv.into / lv.need) * 100)}%`, backgroundColor: accent }} />
             </View>
 
-            <Text className="mt-5 text-[46px] font-bold tracking-[3px] text-ink">{code}</Text>
+            {code ? (
+              <Text className="mt-5 text-[46px] font-bold tracking-[3px] text-ink">{code}</Text>
+            ) : (
+              <Pressable onPress={() => router.push({ pathname: '/onboarding' })} className="mt-5 active:opacity-70">
+                <Text className="text-[26px] font-bold text-ink">{t('me.takeQuiz')}</Text>
+                <Hint className="mt-1">{t('me.takeQuizHint')}</Hint>
+              </Pressable>
+            )}
             <Text className="mt-1 text-[15px] font-bold text-sub" numberOfLines={1}>
               {[profile.data?.handle ? `@${profile.data.handle}` : profile.data?.display_name, subtitle].filter(Boolean).join(' · ')}
             </Text>

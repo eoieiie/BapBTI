@@ -6,6 +6,7 @@ import { FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { TAB_BAR_SPACE } from '../../components/FloatingTabBar';
 import { Button, Card, ErrorBox, Hint, Input, Loading, Screen, Title } from '../../components/ui';
 import { useCreateGroup, useMyGroups } from '../../hooks/useGroups';
+import { useProfile } from '../../hooks/useProfile';
 import { humanError, t } from '../../lib/i18n';
 
 export default function Home() {
@@ -15,10 +16,12 @@ export default function Home() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [me, setMe] = useState('');
+  const savedName = useProfile().data?.display_name ?? '';
 
   const submit = async () => {
-    if (!name.trim() || !me.trim()) return;
-    const id = await create.mutateAsync({ name: name.trim(), displayName: me.trim() });
+    const myName = me.trim() || savedName;
+    if (!name.trim() || !myName) return;
+    const id = await create.mutateAsync({ name: name.trim(), displayName: myName });
     setOpen(false);
     setName('');
     router.push({ pathname: '/group/[id]', params: { id } });
@@ -54,7 +57,8 @@ export default function Home() {
           <View className="rounded-t-[28px] bg-bg px-5 pb-10 pt-6">
             <Text className="mb-4 text-[20px] font-bold text-ink">{t('home.createTitle')}</Text>
             <Input value={name} onChangeText={setName} placeholder={t('home.groupName')} className="mb-2" />
-            <Input value={me} onChangeText={setMe} placeholder={t('home.yourName')} className="mb-4" />
+            {!savedName && <Input value={me} onChangeText={setMe} placeholder={t('home.yourName')} className="mb-4" />}
+            {savedName && <View className="mb-4" />}
             {create.isError && <Hint className="mb-2">{create.error.message}</Hint>}
             <Button label={t('home.create')} primary loading={create.isPending} onPress={submit} />
             <Button label={t('common.cancel')} ghost className="mt-1" onPress={() => setOpen(false)} />
