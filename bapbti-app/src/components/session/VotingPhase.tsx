@@ -34,7 +34,7 @@ export function VotingPhase({ live }: { live: LiveSession }) {
       </Card>
 
       {vetoed.length > 0 && (
-        <Hint className="mt-2">{vetoed.map((c) => `${c.foods.name} · ${live.nameOf(c.vetoed_by!)}`).join(' / ')}</Hint>
+        <Hint className="mt-2">{`${t('session.vetoedList')}: ${vetoed.map((c) => c.foods.name).join(' · ')}`}</Hint>
       )}
       {vote.isError && <Hint className="mt-1">{vote.error.message.includes('max') ? t('session.maxVotes') : vote.error.message}</Hint>}
 

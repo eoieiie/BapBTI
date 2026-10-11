@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { Avatar, Bottom, Button, Card, ErrorBox, FoodDisc, Header, Hint, Loading, NO_OUTLINE, Row, Screen, Section } from '../../../components/ui';
+import { GroupProfileCard } from '../../../components/GroupProfileCard';
+import { useGroupProfile } from '../../../hooks/useGroupProfile';
 import { useGroup, useRenameGroup, useRenameMe, useStartSession } from '../../../hooks/useGroups';
 import { foodName, humanError, t } from '../../../lib/i18n';
 import { inviteUrl } from '../../../lib/links';
@@ -14,6 +16,7 @@ export default function Group() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const q = useGroup(id);
+  const gp = useGroupProfile(id, q.data?.members);
   const start = useStartSession();
   const renameGroup = useRenameGroup();
   const renameMe = useRenameMe();
@@ -84,6 +87,12 @@ export default function Group() {
         {editing === 'me' && (
           <TextInput autoFocus value={draft} onChangeText={setDraft} onBlur={commit} onSubmitEditing={commit} maxLength={20} style={NO_OUTLINE}
             placeholder={t('group.yourName')} placeholderTextColor="#8E8E93" className="mt-2 h-12 rounded-2xl bg-white px-4 text-[16px] text-ink" />
+        )}
+
+        {gp.data && (
+          <View className="mt-4">
+            <GroupProfileCard data={gp.data} />
+          </View>
         )}
 
         <Section>{t('group.recent')}</Section>

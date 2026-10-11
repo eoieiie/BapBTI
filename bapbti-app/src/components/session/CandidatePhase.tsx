@@ -66,7 +66,7 @@ export function CandidatePhase({ live, foods }: { live: LiveSession; foods: Food
                     <Text className={`text-[16px] font-bold ${c.vetoed_by ? 'text-sub line-through' : 'text-ink'}`}>{foodName(c.foods)}</Text>
                     {c.pitch && !editing && <Text className="mt-0.5 text-[14px] text-ink">{`“${c.pitch}”`}</Text>}
                     <Hint className="mt-0.5">
-                      {c.vetoed_by ? t('session.vetoed', { name: live.nameOf(c.vetoed_by) }) : t('session.proposedBy', { name: live.nameOf(c.proposed_by) })}
+                      {c.vetoed_by ? t('session.vetoed') : t('session.proposedBy', { name: live.nameOf(c.proposed_by) })}
                     </Hint>
 
                     {mine && editing && (
