@@ -18,11 +18,11 @@ export function ResultPhase({ live }: { live: LiveSession }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const { wheelFoods, winnerIndex, decidedFood } = live.wheel;
+  const { wheelFoods, weights, winnerIndex, decidedFood } = live.wheel;
 
   return (
     <View className="flex-1 items-center justify-center">
-      <Wheel labels={wheelFoods.map((f) => f.name)} colors={wheelFoods.map((f) => foodColor(f.id))} winnerIndex={winnerIndex} onDone={onDone} />
+      <Wheel labels={wheelFoods.map((f) => f.name)} colors={wheelFoods.map((f) => foodColor(f.id))} weights={weights} winnerIndex={winnerIndex} onDone={onDone} />
       <View className="mt-8 min-h-[100px] w-full items-center justify-center px-2">
         {done && decidedFood ? (
           <Reveal>

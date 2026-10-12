@@ -36,17 +36,20 @@ export interface LiveSession {
   nameOf: (memberId: string) => string;
   myVotes: string[];
   votedMembers: number;
-  wheel: { wheelFoods: FoodRow[]; winnerIndex: number | null; decidedFood: FoodRow | null };
+  wheel: { wheelFoods: FoodRow[]; weights: number[]; winnerIndex: number | null; decidedFood: FoodRow | null };
 }
 
-/** 룰렛에 그릴 조각들. 서버가 고른 당첨 후보가 빠져 있으면 끼워 넣는다 — 규칙이 어긋나도 화면은 안 깨지게. */
-function buildWheel(candidates: SessionCandidate[], votes: { food_id: string }[], decidedFoodId: string | null): LiveSession['wheel'] {
+/** 룰렛에 그릴 조각들. 조각 크기 = 표 수 (서버가 표 수 비례로 뽑는다, 0010). 아무도 안 찍었으면 균등.
+ *  서버가 고른 당첨 후보가 빠져 있으면 끼워 넣는다 — 규칙이 어긋나도 화면은 안 깨지게. */
+function buildWheel(candidates: SessionCandidate[], votes: { food_id: string; n: number }[], decidedFoodId: string | null): LiveSession['wheel'] {
   const pool = roulettePool(candidates, votes);
+  const countOf = new Map(votes.map((v) => [v.food_id, v.n]));
   if (decidedFoodId && !pool.includes(decidedFoodId)) pool.push(decidedFoodId);
   const byId = new Map(candidates.map((c) => [c.food_id, c.foods]));
   const wheelFoods = pool.map((fid) => byId.get(fid)).filter((f): f is FoodRow => !!f);
   return {
     wheelFoods,
+    weights: wheelFoods.map((f) => Math.max(countOf.get(f.id) ?? 0, 0) || 1),
     winnerIndex: decidedFoodId ? wheelFoods.findIndex((f) => f.id === decidedFoodId) : null,
     decidedFood: decidedFoodId ? (byId.get(decidedFoodId) ?? null) : null,
   };
@@ -75,12 +78,12 @@ export function useLiveSession(id: string | undefined) {
       if (e2) throw e2;
       if (e3) throw e3;
       if (e4) throw e4;
-      // 룰렛 조각: 결과가 나온 판에서만 서버가 "1표 이상 받은 음식"을 준다 (누가 찍었는지는 안 준다)
-      let votedFoods: string[] = [];
+      // 룰렛 조각: 결과가 나온 판에서만 서버가 음식별 표 수를 준다 (누가 찍었는지는 안 준다)
+      let votedFoods: { food_id: string; n: number }[] = [];
       if (s.status === 'done') {
         const { data: vf, error: e5 } = await supabase.rpc('session_voted_foods', { p_session_id: s.id });
         if (e5) throw e5;
-        votedFoods = ((vf ?? []) as string[]).map(String);
+        votedFoods = ((vf ?? []) as { food_id: string; n: number }[]).map((r) => ({ food_id: String(r.food_id), n: Number(r.n) }));
       }
       const ms = (members ?? []) as MemberRow[];
       const uid = currentUserId();
@@ -99,7 +102,7 @@ export function useLiveSession(id: string | undefined) {
         nameOf: (memberId: string) => nameById.get(memberId) ?? '?',
         myVotes: me ? vs.filter((v) => v.member_id === me.id).map((v) => v.food_id) : [],
         votedMembers: ((participants ?? []) as ParticipantRow[]).filter((p) => p.voted).length,
-        wheel: buildWheel(cs, votedFoods.map((food_id) => ({ food_id })), s.decided_food_id),
+        wheel: buildWheel(cs, votedFoods, s.decided_food_id),
       };
     },
   });

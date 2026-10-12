@@ -128,15 +128,64 @@ begin
   return v_result;
 end $$;
 
--- 결과가 나온 판에서만, 1표 이상 받은 음식 목록. 누가 찍었는지는 없다.
-create or replace function public.session_voted_foods(p_session_id uuid)
-returns setof uuid language sql stable security definer set search_path = public as $$
-  select distinct v.food_id
+-- 결과가 나온 판에서만, 음식별 표 수. 누가 찍었는지는 없다. 룰렛 조각 크기에 쓴다.
+drop function if exists public.session_voted_foods(uuid);
+create function public.session_voted_foods(p_session_id uuid)
+returns table (food_id uuid, n int) language sql stable security definer set search_path = public as $$
+  select v.food_id, count(*)::int
   from public.votes v
   join public.sessions s on s.id = v.session_id
   where v.session_id = p_session_id
     and s.status = 'done'
-    and public.is_group_member(s.group_id);
+    and public.is_group_member(s.group_id)
+  group by v.food_id;
 $$;
 
-grant execute on function public.session_voted_foods, public.cast_vote(uuid, uuid) to authenticated;
+-- 룰렛 가중치 확정: 표 수 비례 (DECISIONS 2026-10-12). 본문은 0004 그대로, 기본값만 true.
+create or replace function public.spin_roulette(p_session_id uuid, p_weighted boolean default true)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_gid uuid;
+  v_host uuid;
+  v_food uuid;
+  v_meal uuid;
+  v_total int;
+  v_pick int;
+begin
+  select group_id, started_by into v_gid, v_host from public.sessions where id = p_session_id and status = 'voting';
+  if v_gid is null then raise exception 'not voting'; end if;
+  if v_host <> public.my_member_id(v_gid) then raise exception 'host only'; end if;
+
+  create temp table pool on commit drop as
+  select c.food_id, greatest(count(v.id), 0)::int as n
+  from public.candidates c
+  left join public.votes v on v.session_id = c.session_id and v.food_id = c.food_id
+  where c.session_id = p_session_id and c.vetoed_by is null
+  group by c.food_id;
+
+  if (select coalesce(sum(n), 0) from pool) > 0 then
+    delete from pool where n = 0;
+  end if;
+  if not exists (select 1 from pool) then raise exception 'no candidates'; end if;
+
+  -- 아무도 안 찍었으면 n이 전부 0이라 비례가 안 된다 → 균등
+  if p_weighted and (select sum(n) from pool) > 0 then
+    select sum(n) into v_total from pool;
+    v_pick := 1 + floor(random() * v_total)::int;
+    select food_id into v_food from (
+      select food_id, sum(n) over (order by food_id) as cum from pool
+    ) t where cum >= v_pick order by cum limit 1;
+  else
+    select food_id into v_food from pool order by random() limit 1;
+  end if;
+
+  update public.sessions set status = 'done', decided_food_id = v_food, decided_at = now() where id = p_session_id;
+
+  insert into public.meals (group_id, session_id, food_id) values (v_gid, p_session_id, v_food) returning id into v_meal;
+  insert into public.meal_participants (meal_id, member_id)
+  select v_meal, member_id from public.session_participants where session_id = p_session_id;
+
+  return v_food;
+end $$;
+
+grant execute on function public.session_voted_foods, public.cast_vote(uuid, uuid), public.spin_roulette to authenticated;
